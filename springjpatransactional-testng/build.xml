@@ -1,0 +1,61 @@
+<project name = "TestNGTest" default = "test" basedir = ".">
+
+    <!-- Define <testng> task -->
+
+    <taskdef name = "testng" classname = "org.testng.TestNGAntTask">
+        <classpath>
+            <pathelement location = "/home/pablo/.m2/repository/org/testng/testng/6.8/testng-6.8.jar"/>
+        </classpath>
+    </taskdef>
+    
+    <!-- 
+    Hacer clean
+    
+    Setup: generacion de folders que incluye la generacion del classpath txt
+    
+    
+    -->
+
+    <property name = "appclasses" location = "./target/classes" />
+    <property name = "testdir" location = "./target/test-classes" />
+    <property name = "srcdir" location = "./src/test/unit" />
+    <property name = "full-compile" value="true" />
+
+    <delete dir="./class_path.txt"/>
+    <exec executable="mvn">
+        <arg value="dependency:build-classpath"/>
+        <arg value="-Dmdep.outputFile=class_path.txt"/>
+    </exec>
+
+    <loadfile property="compile_classpath" srcFile="./class_path.txt"/>
+    <!--echo>${compile_classpath}</echo-->
+    
+
+    <path id = "classpath.test" path="${compile_classpath}">
+        <pathelement location = "${testdir}" />
+        <pathelement location = "${appclasses}" />
+    </path>
+
+    <target name = "clean" >
+        <delete dir="${testdir}"/>
+        <mkdir dir="${testdir}"/>
+    </target>
+
+    <target name = "compile" depends="clean">
+        <javac srcdir = "${srcdir}" 
+               destdir = "${testdir}" 
+               verbose = "${full-compile}" 
+               includeantruntime = "false">
+            
+            <classpath refid = "classpath.test"/>
+            
+        </javac>
+    </target>
+
+    <target name = "test" depends="compile">
+        <testng outputdir = "${testdir}/unit" classpathref="classpath.test">
+            <xmlfileset dir = "${srcdir}/resources" includes="testng.xml"/>
+        </testng>
+    </target>
+
+</project>
